@@ -4,7 +4,6 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { getSubjectById, Subject, deleteSubject } from '../db/subjects';
 import { getSectionsBySubject, Section, addSection, getSectionCardsDueToday } from '../db/sections';
-import { addCard } from '../db/cards';
 import { useAppTheme } from '../utils/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Subject'>;
@@ -16,10 +15,6 @@ export default function SubjectScreen({ route, navigation }: Props) {
   const [sections, setSections] = useState<(Section & { dueCards: number })[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
-  
-  const [addCardModalVisible, setAddCardModalVisible] = useState(false);
-  const [frontText, setFrontText] = useState('');
-  const [backText, setBackText] = useState('');
 
   const loadData = () => {
     const sub = getSubjectById(subjectId);
@@ -28,7 +23,12 @@ export default function SubjectScreen({ route, navigation }: Props) {
       navigation.setOptions({ 
         title: sub.name, 
         headerStyle: { backgroundColor: sub.color },
-        headerTintColor: '#fff'
+        headerTintColor: '#fff',
+        headerRight: () => (
+          <TouchableOpacity onPress={handleDelete}>
+            <Text style={{ fontSize: 20 }}>🗑️</Text>
+          </TouchableOpacity>
+        )
       });
       const secs = getSectionsBySubject(subjectId).map(s => ({
         ...s,
@@ -51,24 +51,6 @@ export default function SubjectScreen({ route, navigation }: Props) {
     loadData();
   };
 
-  const handleAddCard = () => {
-    if (!frontText.trim() || !backText.trim()) return;
-    
-    let targetSectionId;
-    if (sections.length === 0) {
-      targetSectionId = addSection(subjectId, 'General');
-    } else {
-      targetSectionId = sections[0].id; // Simple default to first section
-    }
-    
-    addCard(targetSectionId, frontText.trim(), backText.trim());
-    setFrontText('');
-    setBackText('');
-    setAddCardModalVisible(false);
-    loadData();
-    Alert.alert('Éxito', 'Carta agregada correctamente');
-  };
-
   const handleDelete = () => {
     Alert.alert('Eliminar', '¿Estás seguro de eliminar esta materia y todas sus cartas?', [
       { text: 'Cancelar', style: 'cancel' },
@@ -83,17 +65,7 @@ export default function SubjectScreen({ route, navigation }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.actionsRow}>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.surface }]} onPress={() => navigation.navigate('Study', { subjectId })}>
-          <Text style={[styles.actionText, { color: theme.text }]}>▶️ Estudiar todo</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.surface }]} onPress={() => setAddCardModalVisible(true)}>
-          <Text style={[styles.actionText, { color: theme.text }]}>➕ Agregar Carta</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.dangerBackground }]} onPress={handleDelete}>
-          <Text style={[styles.actionText, { color: theme.danger }]}>🗑️</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={[styles.title, { color: theme.text }]}>Secciones</Text>
 
       <FlatList
         data={sections}
@@ -139,48 +111,13 @@ export default function SubjectScreen({ route, navigation }: Props) {
           </View>
         </View>
       </Modal>
-
-      <Modal visible={addCardModalVisible} transparent animationType="slide">
-        <View style={[styles.modalOverlay, { backgroundColor: theme.modalOverlay }]}>
-          <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Nueva Carta</Text>
-            <Text style={{color: theme.textSecondary, marginBottom: 8, fontSize: 12}}>
-              {sections.length === 0 ? "Se creará una sección 'General' automáticamente." : `Se guardará en la sección: ${sections[0].name}`}
-            </Text>
-            <TextInput
-              style={[styles.input, { borderColor: theme.border, color: theme.text }]}
-              placeholder="Frente (Ej. Apple)"
-              placeholderTextColor={theme.textSecondary}
-              value={frontText}
-              onChangeText={setFrontText}
-            />
-            <TextInput
-              style={[styles.input, { borderColor: theme.border, color: theme.text }]}
-              placeholder="Reverso (Ej. Manzana)"
-              placeholderTextColor={theme.textSecondary}
-              value={backText}
-              onChangeText={setBackText}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setAddCardModalVisible(false)}>
-                <Text style={[styles.btnText, { color: theme.textSecondary }]}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.saveBtn, { backgroundColor: subject.color }]} onPress={handleAddCard}>
-                <Text style={[styles.btnText, { color: '#fff' }]}>Guardar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  actionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  actionBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, elevation: 1 },
-  actionText: { fontSize: 14, fontWeight: '600' },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
   sectionCard: {
     padding: 16, borderRadius: 12, marginBottom: 12,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
