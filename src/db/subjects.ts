@@ -34,3 +34,22 @@ export function getSubjectCardsDueToday(subjectId: number): number {
   `, [subjectId]);
   return result?.count || 0;
 }
+
+export function getSubjectTotalCards(subjectId: number): number {
+  const result = db.getFirstSync<{ count: number }>(`
+    SELECT COUNT(*) as count 
+    FROM cards c
+    JOIN sections s ON c.section_id = s.id
+    WHERE s.subject_id = ?
+  `, [subjectId]);
+  return result?.count || 0;
+}
+
+export function getSubjectSectionCount(subjectId: number): number {
+  const result = db.getFirstSync<{ count: number }>(`
+    SELECT COUNT(*) as count 
+    FROM sections
+    WHERE subject_id = ?
+  `, [subjectId]);
+  return result?.count || 0;
+}
