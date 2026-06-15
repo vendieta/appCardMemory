@@ -8,10 +8,12 @@ import { handleCorrectAnswer, handleIncorrectAnswer } from '../utils/leitner';
 import { incrementCardsCorrectToday } from '../utils/streak';
 import FlipCard from '../components/FlipCard';
 import ProgressBar from '../components/ProgressBar';
+import { useAppTheme } from '../utils/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Study'>;
 
 export default function StudyScreen({ route, navigation }: Props) {
+  const theme = useAppTheme();
   const { subjectId, sectionId } = route.params;
   const [cards, setCards] = useState<CardWithProgress[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -48,11 +50,11 @@ export default function StudyScreen({ route, navigation }: Props) {
 
   if (cards.length === 0) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
         <Text style={styles.emoji}>🎉</Text>
-        <Text style={styles.messageTitle}>¡Todo al día!</Text>
-        <Text style={styles.messageSub}>No hay cartas para revisar hoy.</Text>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <Text style={[styles.messageTitle, { color: theme.text }]}>¡Todo al día!</Text>
+        <Text style={[styles.messageSub, { color: theme.textSecondary }]}>No hay cartas para revisar hoy.</Text>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.primary }]} onPress={() => navigation.goBack()}>
           <Text style={styles.backBtnText}>Volver</Text>
         </TouchableOpacity>
       </View>
@@ -61,14 +63,14 @@ export default function StudyScreen({ route, navigation }: Props) {
 
   if (isFinished) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
         <Text style={styles.emoji}>🏆</Text>
-        <Text style={styles.messageTitle}>¡Sesión terminada!</Text>
-        <View style={styles.statsBox}>
-          <Text style={styles.statText}>✅ Correctas: {sessionStats.correct}</Text>
-          <Text style={styles.statText}>❌ Incorrectas: {sessionStats.incorrect}</Text>
+        <Text style={[styles.messageTitle, { color: theme.text }]}>¡Sesión terminada!</Text>
+        <View style={[styles.statsBox, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.statText, { color: theme.text }]}>✅ Correctas: {sessionStats.correct}</Text>
+          <Text style={[styles.statText, { color: theme.text }]}>❌ Incorrectas: {sessionStats.incorrect}</Text>
         </View>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.primary }]} onPress={() => navigation.goBack()}>
           <Text style={styles.backBtnText}>Volver</Text>
         </TouchableOpacity>
       </View>
@@ -78,7 +80,7 @@ export default function StudyScreen({ route, navigation }: Props) {
   const currentCard = cards[currentIndex];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.progressContainer}>
         <ProgressBar 
           current={currentIndex + 1} 
@@ -100,15 +102,15 @@ export default function StudyScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F4F6' },
+  container: { flex: 1 },
   progressContainer: { padding: 20 },
   cardContainer: { flex: 1, padding: 20, justifyContent: 'center' },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#F3F4F6' },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   emoji: { fontSize: 64, marginBottom: 16 },
-  messageTitle: { fontSize: 24, fontWeight: 'bold', color: '#1F2937', marginBottom: 8 },
-  messageSub: { fontSize: 16, color: '#6B7280', marginBottom: 32, textAlign: 'center' },
-  statsBox: { backgroundColor: '#fff', padding: 20, borderRadius: 12, marginBottom: 32, width: '100%', elevation: 2 },
-  statText: { fontSize: 18, fontWeight: 'bold', marginBottom: 8, color: '#374151' },
-  backBtn: { backgroundColor: '#4F46E5', paddingHorizontal: 32, paddingVertical: 16, borderRadius: 12 },
+  messageTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
+  messageSub: { fontSize: 16, marginBottom: 32, textAlign: 'center' },
+  statsBox: { padding: 20, borderRadius: 12, marginBottom: 32, width: '100%', elevation: 2 },
+  statText: { fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
+  backBtn: { paddingHorizontal: 32, paddingVertical: 16, borderRadius: 12 },
   backBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });

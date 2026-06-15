@@ -8,6 +8,7 @@ import SubjectCard from '../components/SubjectCard';
 import { getSubjects, addSubject, Subject, getSubjectCardsDueToday } from '../db/subjects';
 import { getStreak, StreakInfo } from '../db/streak';
 import { initializeStreakOnStartup } from '../utils/streak';
+import { useAppTheme } from '../utils/theme';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Tabs'>;
 
@@ -18,6 +19,7 @@ interface Props {
 const COLORS = ['#4F46E5', '#059669', '#DC2626', '#D97706', '#7C3AED', '#0891B2'];
 
 export default function HomeScreen({ navigation }: Props) {
+  const theme = useAppTheme();
   const [subjects, setSubjects] = useState<(Subject & { dueCards: number })[]>([]);
   const [streakInfo, setStreakInfo] = useState<StreakInfo | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -53,7 +55,7 @@ export default function HomeScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {streakInfo && (
         <>
           <StreakBanner currentStreak={streakInfo.current_streak} bestStreak={streakInfo.best_streak} />
@@ -81,17 +83,18 @@ export default function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.listContent}
       />
 
-      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
+      <TouchableOpacity style={[styles.fab, { backgroundColor: theme.primary }]} onPress={() => setModalVisible(true)}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Nueva Materia</Text>
+        <View style={[styles.modalOverlay, { backgroundColor: theme.modalOverlay }]}>
+          <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Nueva Materia</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { borderColor: theme.border, color: theme.text }]}
               placeholder="Nombre de la materia"
+              placeholderTextColor={theme.textSecondary}
               value={newSubjectName}
               onChangeText={setNewSubjectName}
             />
@@ -99,16 +102,16 @@ export default function HomeScreen({ navigation }: Props) {
               {COLORS.map(color => (
                 <TouchableOpacity
                   key={color}
-                  style={[styles.colorCircle, { backgroundColor: color, borderWidth: selectedColor === color ? 3 : 0 }]}
+                  style={[styles.colorCircle, { backgroundColor: color, borderWidth: selectedColor === color ? 3 : 0, borderColor: theme.text }]}
                   onPress={() => setSelectedColor(color)}
                 />
               ))}
             </ScrollView>
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
-                <Text style={styles.btnText}>Cancelar</Text>
+                <Text style={[styles.btnText, { color: theme.textSecondary }]}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleAddSubject}>
+              <TouchableOpacity style={[styles.saveBtn, { backgroundColor: theme.primary }]} onPress={handleAddSubject}>
                 <Text style={[styles.btnText, { color: '#fff' }]}>Guardar</Text>
               </TouchableOpacity>
             </View>
@@ -120,23 +123,23 @@ export default function HomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F4F6', padding: 16 },
+  container: { flex: 1, padding: 16 },
   listContent: { paddingBottom: 80 },
   fab: {
     position: 'absolute', right: 20, bottom: 20,
-    backgroundColor: '#4F46E5', width: 60, height: 60,
+    width: 60, height: 60,
     borderRadius: 30, justifyContent: 'center', alignItems: 'center',
     elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3
   },
   fabText: { fontSize: 32, color: '#fff', fontWeight: 'bold' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: '#fff', width: '80%', padding: 20, borderRadius: 12 },
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  modalContent: { width: '80%', padding: 20, borderRadius: 12 },
   modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
-  input: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, padding: 12, marginBottom: 16 },
+  input: { borderWidth: 1, borderRadius: 8, padding: 12, marginBottom: 16 },
   colorRow: { flexDirection: 'row', marginBottom: 20 },
-  colorCircle: { width: 40, height: 40, borderRadius: 20, marginRight: 12, borderColor: '#374151' },
+  colorCircle: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
   modalButtons: { flexDirection: 'row', justifyContent: 'flex-end' },
   cancelBtn: { padding: 12, marginRight: 8 },
-  saveBtn: { padding: 12, backgroundColor: '#4F46E5', borderRadius: 8 },
-  btnText: { fontWeight: 'bold', color: '#374151' }
+  saveBtn: { padding: 12, borderRadius: 8 },
+  btnText: { fontWeight: 'bold' }
 });

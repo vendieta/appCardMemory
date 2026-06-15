@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useAppTheme } from '../utils/theme';
 
 interface SubjectCardProps {
   name: string;
@@ -9,20 +10,21 @@ interface SubjectCardProps {
 }
 
 export default function SubjectCard({ name, color, dueCards, onPress }: SubjectCardProps) {
+  const theme = useAppTheme();
   return (
     <TouchableOpacity 
-      style={[styles.card, { borderLeftColor: color, borderLeftWidth: 6 }]} 
+      style={[styles.card, { backgroundColor: theme.surface, borderLeftColor: color, borderLeftWidth: 6 }]} 
       onPress={onPress}
       activeOpacity={0.8}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>{name}</Text>
+        <Text style={[styles.title, { color: theme.text }]}>{name}</Text>
         {dueCards > 0 ? (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{dueCards} para hoy</Text>
+          <View style={[styles.badge, { backgroundColor: theme.dangerBackground }]}>
+            <Text style={[styles.badgeText, { color: theme.danger }]}>{dueCards} para hoy</Text>
           </View>
         ) : (
-          <Text style={styles.doneText}>Al día 🎉</Text>
+          <Text style={[styles.doneText, { color: theme.success }]}>Al día 🎉</Text>
         )}
       </View>
     </TouchableOpacity>
@@ -31,7 +33,6 @@ export default function SubjectCard({ name, color, dueCards, onPress }: SubjectC
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 12,
     elevation: 2,
@@ -49,21 +50,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1F2937',
   },
   badge: {
-    backgroundColor: '#FEE2E2',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   badgeText: {
-    color: '#DC2626',
     fontWeight: 'bold',
     fontSize: 12,
   },
   doneText: {
-    color: '#059669',
     fontWeight: 'bold',
     fontSize: 14,
   },

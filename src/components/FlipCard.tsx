@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import * as Speech from 'expo-speech';
+import { useAppTheme } from '../utils/theme';
 
 interface FlipCardProps {
   front: string;
@@ -10,6 +11,7 @@ interface FlipCardProps {
 }
 
 export default function FlipCard({ front, back, language = 'en-US', onAnswer }: FlipCardProps) {
+  const theme = useAppTheme();
   const [isFlipped, setIsFlipped] = useState(false);
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -48,16 +50,16 @@ export default function FlipCard({ front, back, language = 'en-US', onAnswer }: 
   return (
     <View style={styles.container}>
       <TouchableOpacity activeOpacity={1} onPress={flipCard} style={styles.cardContainer}>
-        <Animated.View style={[styles.card, styles.cardFront, frontAnimatedStyle]}>
-          <Text style={styles.text}>{front}</Text>
-          <TouchableOpacity style={styles.speaker} onPress={() => speak(front, language)}>
+        <Animated.View style={[styles.card, { backgroundColor: theme.surface }, frontAnimatedStyle]}>
+          <Text style={[styles.text, { color: theme.text }]}>{front}</Text>
+          <TouchableOpacity style={[styles.speaker, { backgroundColor: theme.background }]} onPress={() => speak(front, language)}>
             <Text style={styles.speakerIcon}>🔊</Text>
           </TouchableOpacity>
         </Animated.View>
 
-        <Animated.View style={[styles.card, styles.cardBack, backAnimatedStyle]}>
-          <Text style={styles.text}>{back}</Text>
-          <TouchableOpacity style={styles.speaker} onPress={() => speak(back, language === 'en-US' ? 'es-ES' : language)}>
+        <Animated.View style={[styles.card, { backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.primary }, backAnimatedStyle]}>
+          <Text style={[styles.text, { color: theme.text }]}>{back}</Text>
+          <TouchableOpacity style={[styles.speaker, { backgroundColor: theme.background }]} onPress={() => speak(back, language === 'en-US' ? 'es-ES' : language)}>
             <Text style={styles.speakerIcon}>🔊</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -65,11 +67,11 @@ export default function FlipCard({ front, back, language = 'en-US', onAnswer }: 
 
       {isFlipped && onAnswer && (
         <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={[styles.button, styles.btnIncorrect]} onPress={() => onAnswer(false)}>
-            <Text style={styles.btnText}>❌ No lo supe</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: theme.dangerBackground, borderColor: theme.danger, borderWidth: 1 }]} onPress={() => onAnswer(false)}>
+            <Text style={[styles.btnText, { color: theme.text }]}>❌ No lo supe</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.btnCorrect]} onPress={() => onAnswer(true)}>
-            <Text style={styles.btnText}>✅ Lo supe</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: theme.success + '20', borderColor: theme.success, borderWidth: 1 }]} onPress={() => onAnswer(true)}>
+            <Text style={[styles.btnText, { color: theme.text }]}>✅ Lo supe</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -92,7 +94,6 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#fff',
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -105,16 +106,9 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     padding: 20,
   },
-  cardFront: {
-    backgroundColor: '#F9FAFB',
-  },
-  cardBack: {
-    backgroundColor: '#EEF2FF',
-  },
   text: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1F2937',
     textAlign: 'center',
   },
   speaker: {
@@ -122,7 +116,6 @@ const styles = StyleSheet.create({
     bottom: 20,
     right: 20,
     padding: 10,
-    backgroundColor: '#E5E7EB',
     borderRadius: 30,
   },
   speakerIcon: {
@@ -141,19 +134,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     alignItems: 'center',
   },
-  btnIncorrect: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#F87171',
-  },
-  btnCorrect: {
-    backgroundColor: '#D1FAE5',
-    borderWidth: 1,
-    borderColor: '#34D399',
-  },
   btnText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1F2937',
   },
 });

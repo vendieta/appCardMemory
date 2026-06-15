@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useAppTheme } from '../utils/theme';
 
 interface StreakBannerProps {
   currentStreak: number;
@@ -7,16 +8,17 @@ interface StreakBannerProps {
 }
 
 export default function StreakBanner({ currentStreak, bestStreak }: StreakBannerProps) {
+  const theme = useAppTheme();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
       <View style={styles.streakBox}>
         <Text style={styles.emoji}>{currentStreak > 0 ? '🔥' : '🧊'}</Text>
-        <Text style={styles.streakText}>
+        <Text style={[styles.streakText, { color: theme.text }]}>
           {currentStreak} {currentStreak === 1 ? 'día' : 'días'}
         </Text>
       </View>
-      <View style={styles.bestBox}>
-        <Text style={styles.bestText}>Mejor racha: {bestStreak}</Text>
+      <View style={[styles.bestBox, { backgroundColor: theme.background }]}>
+        <Text style={[styles.bestText, { color: theme.textSecondary }]}>Mejor racha: {bestStreak}</Text>
       </View>
     </View>
   );
@@ -27,7 +29,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
@@ -48,10 +49,8 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   bestBox: {
-    backgroundColor: '#F3F4F6',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -59,6 +58,5 @@ const styles = StyleSheet.create({
   bestText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
   },
 });
