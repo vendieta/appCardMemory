@@ -27,7 +27,11 @@ export default function FlipCard({ front, back, language = 'en-US', onAnswer }: 
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (e, gestureState) => {
+        // Intercept touch if it is a swipe up (dy is negative and vertical movement is greater than horizontal)
+        return gestureState.dy < -10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+      },
       onPanResponderRelease: (e, gestureState) => {
         // Only flip if it's a swipe up (dy is negative and magnitude > 30)
         if (gestureState.dy < -30 && Math.abs(gestureState.dx) < 50) {
@@ -62,14 +66,20 @@ export default function FlipCard({ front, back, language = 'en-US', onAnswer }: 
   return (
     <View style={styles.container}>
       <View {...panResponder.panHandlers} style={styles.cardContainer}>
-        <Animated.View style={[styles.card, { backgroundColor: theme.surface }, frontAnimatedStyle]}>
+        <Animated.View 
+          pointerEvents={isFlipped ? 'none' : 'auto'}
+          style={[styles.card, { backgroundColor: theme.surface }, frontAnimatedStyle]}
+        >
           <Text style={[styles.text, { color: theme.text }]}>{front}</Text>
           <TouchableOpacity style={[styles.speaker, { backgroundColor: theme.background }]} onPress={() => speak(front, language)}>
             <Text style={styles.speakerIcon}>🔊</Text>
           </TouchableOpacity>
         </Animated.View>
 
-        <Animated.View style={[styles.card, { backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.primary }, backAnimatedStyle]}>
+        <Animated.View 
+          pointerEvents={isFlipped ? 'auto' : 'none'}
+          style={[styles.card, { backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.primary }, backAnimatedStyle]}
+        >
           <Text style={[styles.text, { color: theme.text }]}>{back}</Text>
           <TouchableOpacity style={[styles.speaker, { backgroundColor: theme.background }]} onPress={() => speak(back, language === 'en-US' ? 'es-ES' : language)}>
             <Text style={styles.speakerIcon}>🔊</Text>
