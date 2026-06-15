@@ -33,3 +33,23 @@ export function getSectionCardsDueToday(sectionId: number): number {
   `, [sectionId]);
   return result?.count || 0;
 }
+
+export function getTotalCardsBySection(sectionId: number): number {
+  const result = db.getFirstSync<{ count: number }>(`
+    SELECT COUNT(*) as count FROM cards WHERE section_id = ?
+  `, [sectionId]);
+  return result?.count || 0;
+}
+
+export function getSectionStats(sectionId: number): { total: number; mastered: number; progress: number } {
+  const result = db.getFirstSync<{ total: number; mastered: number; progress: number }>(`
+    SELECT 
+      COUNT(*) as total,
+      SUM(CASE WHEN cp.box >= 4 THEN 1 ELSE 0 END) as mastered,
+      SUM(CASE WHEN cp.box > 1 AND cp.box < 4 THEN 1 ELSE 0 END) as progress
+    FROM cards c
+    LEFT JOIN card_progress cp ON c.id = cp.card_id
+    WHERE c.section_id = ?
+  `, [sectionId]);
+  return result || { total: 0, mastered: 0, progress: 0 };
+}
