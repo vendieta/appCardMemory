@@ -33,6 +33,7 @@ export const darkTheme = {
 export type Theme = typeof lightTheme;
 
 export function useAppTheme() {
-  const scheme = useColorScheme();
-  return scheme === 'dark' ? darkTheme : lightTheme;
+  // El usuario solicitó que la app esté en modo oscuro.
+  // Ignoramos el scheme del sistema por ahora y forzamos darkTheme.
+  return darkTheme;
 }

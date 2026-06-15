@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { getDueCardsBySubject, getDueCardsBySection } from '../db/progress';
+import { getAllCardsForStudyBySubject, getAllCardsForStudyBySection } from '../db/progress';
 import { CardWithProgress } from '../db/cards';
 import { handleCorrectAnswer, handleIncorrectAnswer } from '../utils/leitner';
 import { incrementCardsCorrectToday } from '../utils/streak';
@@ -18,16 +18,20 @@ export default function StudyScreen({ route, navigation }: Props) {
   const [cards, setCards] = useState<CardWithProgress[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
-  const [isFinished, setIsFinished] = useState(false);
+
+  const loadCards = () => {
+    let practiceCards: CardWithProgress[] = [];
+    if (sectionId) {
+      practiceCards = getAllCardsForStudyBySection(sectionId);
+    } else if (subjectId) {
+      practiceCards = getAllCardsForStudyBySubject(subjectId);
+    }
+    setCards(practiceCards);
+    setCurrentIndex(0);
+  };
 
   useEffect(() => {
-    let dueCards: CardWithProgress[] = [];
-    if (sectionId) {
-      dueCards = getDueCardsBySection(sectionId);
-    } else if (subjectId) {
-      dueCards = getDueCardsBySubject(subjectId);
-    }
-    setCards(dueCards);
+    loadCards();
   }, [subjectId, sectionId]);
 
   const handleAnswer = (isCorrect: boolean) => {
@@ -44,7 +48,8 @@ export default function StudyScreen({ route, navigation }: Props) {
     if (currentIndex + 1 < cards.length) {
       setCurrentIndex(prev => prev + 1);
     } else {
-      setIsFinished(true);
+      // Endless practice: re-fetch cards to get new order based on mistakes, and restart
+      loadCards();
     }
   };
 
@@ -52,24 +57,8 @@ export default function StudyScreen({ route, navigation }: Props) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
         <Text style={styles.emoji}>🎉</Text>
-        <Text style={[styles.messageTitle, { color: theme.text }]}>¡Todo al día!</Text>
-        <Text style={[styles.messageSub, { color: theme.textSecondary }]}>No hay cartas para revisar hoy.</Text>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.primary }]} onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtnText}>Volver</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  if (isFinished) {
-    return (
-      <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
-        <Text style={styles.emoji}>🏆</Text>
-        <Text style={[styles.messageTitle, { color: theme.text }]}>¡Sesión terminada!</Text>
-        <View style={[styles.statsBox, { backgroundColor: theme.surface }]}>
-          <Text style={[styles.statText, { color: theme.text }]}>✅ Correctas: {sessionStats.correct}</Text>
-          <Text style={[styles.statText, { color: theme.text }]}>❌ Incorrectas: {sessionStats.incorrect}</Text>
-        </View>
+        <Text style={[styles.messageTitle, { color: theme.text }]}>No hay cartas</Text>
+        <Text style={[styles.messageSub, { color: theme.textSecondary }]}>Agrega algunas cartas para practicar.</Text>
         <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.primary }]} onPress={() => navigation.goBack()}>
           <Text style={styles.backBtnText}>Volver</Text>
         </TouchableOpacity>

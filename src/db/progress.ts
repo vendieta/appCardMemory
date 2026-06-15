@@ -20,6 +20,27 @@ export function getDueCardsBySection(sectionId: number): CardWithProgress[] {
   `, [sectionId]);
 }
 
+export function getAllCardsForStudyBySubject(subjectId: number): CardWithProgress[] {
+  return db.getAllSync<CardWithProgress>(`
+    SELECT c.*, cp.box, cp.next_review, cp.last_reviewed, cp.total_correct, cp.total_incorrect
+    FROM cards c
+    JOIN sections s ON c.section_id = s.id
+    JOIN card_progress cp ON cp.card_id = c.id
+    WHERE s.subject_id = ?
+    ORDER BY cp.total_incorrect DESC, cp.total_correct ASC, RANDOM()
+  `, [subjectId]);
+}
+
+export function getAllCardsForStudyBySection(sectionId: number): CardWithProgress[] {
+  return db.getAllSync<CardWithProgress>(`
+    SELECT c.*, cp.box, cp.next_review, cp.last_reviewed, cp.total_correct, cp.total_incorrect
+    FROM cards c
+    JOIN card_progress cp ON cp.card_id = c.id
+    WHERE c.section_id = ?
+    ORDER BY cp.total_incorrect DESC, cp.total_correct ASC, RANDOM()
+  `, [sectionId]);
+}
+
 export function updateCardProgress(cardId: number, box: number, nextReviewDate: string, isCorrect: boolean) {
   const correctIncrement = isCorrect ? 1 : 0;
   const incorrectIncrement = isCorrect ? 0 : 1;

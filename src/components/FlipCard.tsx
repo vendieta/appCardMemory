@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, PanResponder } from 'react-native';
 import * as Speech from 'expo-speech';
 import { useAppTheme } from '../utils/theme';
 
@@ -25,6 +25,18 @@ export default function FlipCard({ front, back, language = 'en-US', onAnswer }: 
     }).start();
   };
 
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderRelease: (e, gestureState) => {
+        // Only flip if it's a swipe up (dy is negative and magnitude > 30)
+        if (gestureState.dy < -30 && Math.abs(gestureState.dx) < 50) {
+          flipCard();
+        }
+      },
+    })
+  ).current;
+
   const frontInterpolate = animatedValue.interpolate({
     inputRange: [0, 180],
     outputRange: ['0deg', '180deg'],
@@ -49,7 +61,7 @@ export default function FlipCard({ front, back, language = 'en-US', onAnswer }: 
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity activeOpacity={1} onPress={flipCard} style={styles.cardContainer}>
+      <View {...panResponder.panHandlers} style={styles.cardContainer}>
         <Animated.View style={[styles.card, { backgroundColor: theme.surface }, frontAnimatedStyle]}>
           <Text style={[styles.text, { color: theme.text }]}>{front}</Text>
           <TouchableOpacity style={[styles.speaker, { backgroundColor: theme.background }]} onPress={() => speak(front, language)}>
@@ -63,7 +75,7 @@ export default function FlipCard({ front, back, language = 'en-US', onAnswer }: 
             <Text style={styles.speakerIcon}>🔊</Text>
           </TouchableOpacity>
         </Animated.View>
-      </TouchableOpacity>
+      </View>
 
       {isFlipped && onAnswer && (
         <View style={styles.buttonsContainer}>
