@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
   badgeText: { fontWeight: 'bold', fontSize: 12 },
   fab: {
-    position: 'absolute', right: 20, bottom: 20, width: 60, height: 60,
+    position: 'absolute', right: 20, bottom: 100, width: 60, height: 60,
     borderRadius: 30, justifyContent: 'center', alignItems: 'center',
     elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3
   },

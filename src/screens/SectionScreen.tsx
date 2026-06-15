@@ -54,13 +54,6 @@ export default function SectionScreen({ route, navigation }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <TouchableOpacity 
-        style={[styles.studyBtn, { backgroundColor: theme.primary }]} 
-        onPress={() => navigation.navigate('Study', { sectionId })}
-      >
-        <Text style={styles.studyBtnText}>▶️ Estudiar sección</Text>
-      </TouchableOpacity>
-
       <FlatList
         data={cards}
         keyExtractor={item => item.id.toString()}
@@ -74,6 +67,16 @@ export default function SectionScreen({ route, navigation }: Props) {
             </View>
             <TouchableOpacity onPress={() => handleDeleteCard(item.id)}>
               <Text style={[styles.deleteIcon, { color: theme.danger }]}>🗑️</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        ListFooterComponent={() => (
+          <View style={styles.footer}>
+            <TouchableOpacity 
+              style={[styles.studyBtn, { backgroundColor: theme.primary }]} 
+              onPress={() => navigation.navigate('Study', { sectionId })}
+            >
+              <Text style={styles.studyBtnText}>▶️ Estudiar sección</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -118,15 +121,35 @@ export default function SectionScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  studyBtn: { padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 16 },
+  headerBackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginLeft: 10,
+  },
+  studyBtn: { 
+    padding: 16, 
+    borderRadius: 16, 
+    alignItems: 'center', 
+    marginBottom: 24,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
   studyBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  footer: { paddingTop: 12, paddingBottom: 24 },
   cardItem: { padding: 16, borderRadius: 12, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 1 },
   cardContent: { flex: 1 },
   cardFront: { fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   badgeBox: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
   badgeText: { fontSize: 12, fontWeight: 'bold' },
   deleteIcon: { fontSize: 20, marginLeft: 16 },
-  fab: { position: 'absolute', right: 20, bottom: 20, width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', elevation: 5 },
+  fab: { position: 'absolute', right: 20, bottom: 100, width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', elevation: 5 },
   fabText: { fontSize: 32, color: '#fff', fontWeight: 'bold' },
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   modalContent: { width: '80%', padding: 20, borderRadius: 12 },
