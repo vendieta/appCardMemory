@@ -19,14 +19,73 @@ export default function StudyScreen({ route, navigation }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
 
-  const loadCards = () => {
-    let practiceCards: CardWithProgress[] = [];
-    if (sectionId) {
-      practiceCards = getAllCardsForStudyBySection(sectionId);
-    } else if (subjectId) {
-      practiceCards = getAllCardsForStudyBySubject(subjectId);
+  /**
+   * Weighted random deck builder.
+   *
+   * Weight formula per card:
+   *   - base weight = total_incorrect * 3  (failed cards are heavily prioritised)
+   *   - If the card has NEVER been reviewed  → weight = 2 (new card, medium priority)
+   *   - If the card is mostly mastered       → weight = 1 (shows occasionally as reinforcement)
+   *   - Minimum weight is always 1 so every card can appear.
+   *
+   * We then build a "weighted deck" by repeating each card proportional to its weight,
+   * shuffle it, and remove duplicates — giving a random order biased toward hard cards.
+   */
+  const buildWeightedDeck = (allCards: CardWithProgress[]): CardWithProgress[] => {
+    const weightedPool: CardWithProgress[] = [];
+
+    for (const card of allCards) {
+      const neverReviewed = card.last_reviewed === null;
+      let weight: number;
+
+      if (neverReviewed) {
+        weight = 2; // New card — medium priority
+      } else {
+        const totalAnswers = card.total_correct + card.total_incorrect;
+        const failRate = totalAnswers > 0 ? card.total_incorrect / totalAnswers : 0;
+
+        if (failRate >= 0.5 || card.total_incorrect >= 2) {
+          weight = 3 + card.total_incorrect; // Heavy priority for hard cards
+        } else if (card.total_correct >= 3 && failRate < 0.2) {
+          weight = 1; // Mostly mastered — appears occasionally
+        } else {
+          weight = 2; // Neutral — medium priority
+        }
+      }
+
+      for (let i = 0; i < weight; i++) {
+        weightedPool.push(card);
+      }
     }
-    setCards(practiceCards);
+
+    // Fisher-Yates shuffle
+    for (let i = weightedPool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [weightedPool[i], weightedPool[j]] = [weightedPool[j], weightedPool[i]];
+    }
+
+    // Remove duplicates while preserving weighted-random order
+    const seen = new Set<number>();
+    const deck: CardWithProgress[] = [];
+    for (const card of weightedPool) {
+      if (!seen.has(card.id)) {
+        seen.add(card.id);
+        deck.push(card);
+      }
+    }
+
+    return deck;
+  };
+
+  const loadCards = () => {
+    let allCards: CardWithProgress[] = [];
+    if (sectionId) {
+      allCards = getAllCardsForStudyBySection(sectionId);
+    } else if (subjectId) {
+      allCards = getAllCardsForStudyBySubject(subjectId);
+    }
+    const deck = buildWeightedDeck(allCards);
+    setCards(deck);
     setCurrentIndex(0);
   };
 
@@ -48,7 +107,7 @@ export default function StudyScreen({ route, navigation }: Props) {
     if (currentIndex + 1 < cards.length) {
       setCurrentIndex(prev => prev + 1);
     } else {
-      // Endless practice: re-fetch cards to get new order based on mistakes, and restart
+      // End of round → re-build the deck with updated weights based on new mistakes
       loadCards();
     }
   };
