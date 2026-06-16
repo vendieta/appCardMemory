@@ -5,7 +5,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import StreakBanner from '../components/StreakBanner';
 import ProgressBar from '../components/ProgressBar';
 import SubjectCard from '../components/SubjectCard';
-import { getSubjects, addSubject, Subject, getSubjectCardsDueToday } from '../db/subjects';
+import { getSubjects, addSubject, Subject, getSubjectCardsDueToday, getSubjectTotalCards, getSubjectSectionCount } from '../db/subjects';
 import { getStreak, StreakInfo } from '../db/streak';
 import { initializeStreakOnStartup } from '../utils/streak';
 import { useAppTheme } from '../utils/theme';
@@ -18,9 +18,15 @@ interface Props {
 
 const COLORS = ['#4F46E5', '#059669', '#DC2626', '#D97706', '#7C3AED', '#0891B2'];
 
+interface SubjectData extends Subject {
+  dueCards: number;
+  totalCards: number;
+  sections: number;
+}
+
 export default function HomeScreen({ navigation }: Props) {
   const theme = useAppTheme();
-  const [subjects, setSubjects] = useState<(Subject & { dueCards: number })[]>([]);
+  const [subjects, setSubjects] = useState<SubjectData[]>([]);
   const [streakInfo, setStreakInfo] = useState<StreakInfo | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState('');
@@ -31,7 +37,9 @@ export default function HomeScreen({ navigation }: Props) {
     setStreakInfo(getStreak());
     const subs = getSubjects().map(s => ({
       ...s,
-      dueCards: getSubjectCardsDueToday(s.id)
+      dueCards: getSubjectCardsDueToday(s.id),
+      totalCards: getSubjectTotalCards(s.id),
+      sections: getSubjectSectionCount(s.id)
     }));
     setSubjects(subs);
   };
@@ -77,6 +85,8 @@ export default function HomeScreen({ navigation }: Props) {
             name={item.name}
             color={item.color}
             dueCards={item.dueCards}
+            totalCards={item.totalCards}
+            sections={item.sections}
             onPress={() => navigation.navigate('Subject', { subjectId: item.id })}
           />
         )}
@@ -123,7 +133,7 @@ export default function HomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, paddingHorizontal: 16, paddingTop: 8 },
   listContent: { paddingBottom: 80 },
   fab: {
     position: 'absolute', right: 20, bottom: 20,

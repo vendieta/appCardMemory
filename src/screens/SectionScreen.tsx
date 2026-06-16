@@ -54,21 +54,27 @@ export default function SectionScreen({ route, navigation }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <TouchableOpacity 
-        style={[styles.studyBtn, { backgroundColor: theme.primary }]} 
-        onPress={() => navigation.navigate('Study', { sectionId })}
-      >
-        <Text style={styles.studyBtnText}>▶️ Estudiar sección</Text>
-      </TouchableOpacity>
+      <View style={[styles.studyHeader, { backgroundColor: theme.surface }]}> 
+        <View style={styles.studyHeaderContent}>
+          <Text style={[styles.studyTitle, { color: theme.text }]}>Listo para estudiar</Text>
+          <Text style={[styles.studySubtitle, { color: theme.textSecondary }]}>Revisa tus tarjetas más importantes de esta sección</Text>
+        </View>
+        <TouchableOpacity 
+          style={[styles.studyBtn, { backgroundColor: theme.primary }]} 
+          onPress={() => navigation.navigate('Study', { sectionId })}
+        >
+          <Text style={styles.studyBtnText} numberOfLines={1}>▶️ Estudiar</Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         data={cards}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={[styles.cardItem, { backgroundColor: theme.surface }]}>
+          <View style={[styles.cardItem, { backgroundColor: theme.surface }]}> 
             <View style={styles.cardContent}>
               <Text style={[styles.cardFront, { color: theme.text }]}>{item.front}</Text>
-              <View style={[styles.badgeBox, { backgroundColor: theme.primary + '20' }]}>
+              <View style={[styles.badgeBox, { backgroundColor: theme.primary + '20' }]}> 
                 <Text style={[styles.badgeText, { color: theme.primary }]}>Box {item.box}</Text>
               </View>
             </View>
@@ -118,15 +124,63 @@ export default function SectionScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  studyBtn: { padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 16 },
-  studyBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  headerBackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginLeft: 10,
+  },
+  studyHeader: {
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    gap: 12,
+  },
+  studyHeaderContent: {
+    flex: 1,
+  },
+  studyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  studySubtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  studyBtn: { 
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 16, 
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 1,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  studyBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  footer: { paddingTop: 12, paddingBottom: 24 },
   cardItem: { padding: 16, borderRadius: 12, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 1 },
   cardContent: { flex: 1 },
   cardFront: { fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   badgeBox: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
   badgeText: { fontSize: 12, fontWeight: 'bold' },
   deleteIcon: { fontSize: 20, marginLeft: 16 },
-  fab: { position: 'absolute', right: 20, bottom: 20, width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', elevation: 5 },
+  fab: { position: 'absolute', right: 20, bottom: 100, width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', elevation: 5 },
   fabText: { fontSize: 32, color: '#fff', fontWeight: 'bold' },
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   modalContent: { width: '80%', padding: 20, borderRadius: 12 },

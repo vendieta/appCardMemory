@@ -3,16 +3,23 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextI
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { getSubjectById, Subject, deleteSubject } from '../db/subjects';
-import { getSectionsBySubject, Section, addSection, getSectionCardsDueToday } from '../db/sections';
+import { getSectionsBySubject, Section, addSection, getSectionCardsDueToday, getSectionStats } from '../db/sections';
 import { useAppTheme } from '../utils/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Subject'>;
+
+interface SectionWithStats extends Section {
+  dueCards: number;
+  total: number;
+  mastered: number;
+  progress: number;
+}
 
 export default function SubjectScreen({ route, navigation }: Props) {
   const theme = useAppTheme();
   const { subjectId } = route.params;
   const [subject, setSubject] = useState<Subject | null>(null);
-  const [sections, setSections] = useState<(Section & { dueCards: number })[]>([]);
+  const [sections, setSections] = useState<SectionWithStats[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
 
@@ -30,10 +37,14 @@ export default function SubjectScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         )
       });
-      const secs = getSectionsBySubject(subjectId).map(s => ({
-        ...s,
-        dueCards: getSectionCardsDueToday(s.id)
-      }));
+      const secs = getSectionsBySubject(subjectId).map(s => {
+        const stats = getSectionStats(s.id);
+        return {
+          ...s,
+          dueCards: getSectionCardsDueToday(s.id),
+          ...stats
+        };
+      });
       setSections(secs);
     }
   };
@@ -70,19 +81,54 @@ export default function SubjectScreen({ route, navigation }: Props) {
       <FlatList
         data={sections}
         keyExtractor={item => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={[styles.sectionCard, { backgroundColor: theme.surface }]}
-            onPress={() => navigation.navigate('Section', { sectionId: item.id })}
-          >
-            <Text style={[styles.sectionName, { color: theme.text }]}>{item.name}</Text>
-            {item.dueCards > 0 && (
-              <View style={[styles.badge, { backgroundColor: theme.dangerBackground }]}>
-                <Text style={[styles.badgeText, { color: theme.danger }]}>{item.dueCards}</Text>
+        renderItem={({ item }) => {
+          const progressPercent = item.total > 0 ? Math.round((item.mastered / item.total) * 100) : 0;
+          return (
+            <TouchableOpacity 
+              style={[styles.sectionCard, { backgroundColor: theme.surface }]}
+              onPress={() => navigation.navigate('Section', { sectionId: item.id })}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={[styles.sectionName, { color: theme.text }]}>{item.name}</Text>
+                {item.dueCards > 0 && (
+                  <View style={[styles.badge, { backgroundColor: theme.dangerBackground }]}>
+                    <Text style={[styles.badgeText, { color: theme.danger }]}>📚 {item.dueCards}</Text>
+                  </View>
+                )}
               </View>
-            )}
-          </TouchableOpacity>
-        )}
+              
+              <View style={styles.statsContainer}>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: theme.text }]}>{item.total}</Text>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Cartas</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: '#4CAF50' }]}>{item.mastered}</Text>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Dominadas</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: '#FF9800' }]}>{item.progress}</Text>
+                  <Text style={[styles.statLabel, { color: theme.textSecondary }]}>En progreso</Text>
+                </View>
+              </View>
+
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { 
+                      width: `${progressPercent}%`,
+                      backgroundColor: subject.color
+                    }
+                  ]} 
+                />
+              </View>
+              <Text style={[styles.progressText, { color: theme.textSecondary }]}>
+                {progressPercent}% dominadas
+              </Text>
+            </TouchableOpacity>
+          );
+        }}
       />
 
       <TouchableOpacity style={[styles.fab, {backgroundColor: subject.color}]} onPress={() => setModalVisible(true)}>
@@ -119,17 +165,84 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   title: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
   sectionCard: {
-    padding: 16, borderRadius: 12, marginBottom: 12,
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    elevation: 1
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
   },
-  sectionName: { fontSize: 16, fontWeight: 'bold' },
-  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { fontWeight: 'bold', fontSize: 12 },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  sectionName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  badgeText: {
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 14,
+    paddingVertical: 8,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'right',
+  },
   fab: {
-    position: 'absolute', right: 20, bottom: 20, width: 60, height: 60,
-    borderRadius: 30, justifyContent: 'center', alignItems: 'center',
-    elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3
+    position: 'absolute',
+    right: 20,
+    bottom: 100,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
   fabText: { fontSize: 32, color: '#fff', fontWeight: 'bold' },
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
